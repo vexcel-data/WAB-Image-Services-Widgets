@@ -104,45 +104,37 @@ define([
                 clearDateRange: function () {
                     html.set(this.primaryDate, '');
                 },
+		getSamples: function (layer, point, mosaicRule, dateField) {
+		    return new esriRequest({
+                        url: layer.url + "/getSamples",
+                        content: {
+                            f: "json",
+                            geometry: JSON.stringify(point),
+                            geometryType: "esriGeometryPoint",
+                            returnGeometry: false,
+                            mosaicRule: mosaicRule ? JSON.stringify(mosaicRule.toJson()) : mosaicRule,
+                            returnFirstValueOnly: true,
+                            outFields: dateField
+                        },
+                        handleAs: "json",
+                        callbackParamName: "callback"
+                    });
+		},
                 primarydate: function ()
                 {
                     if (this.dateField) {
                         var layer = this.primaryLayer;
                         var point = this.map.extent.getCenter();
                         var mosaicRule = layer.mosaicRule ? layer.mosaicRule : "";
-                        var request = new esriRequest({
-                            url: layer.url + "/getSamples",
-                            content: {
-                                f: "json",
-                                geometry: JSON.stringify(point),
-                                geometryType: "esriGeometryPoint",
-                                returnGeometry: false,
-                                mosaicRule: mosaicRule ? JSON.stringify(mosaicRule.toJson()) : mosaicRule,
-                                returnFirstValueOnly: true,
-                                outFields: this.dateField
-                            },
-                            handleAs: "json",
-                            callbackParamName: "callback"
-                        });
+                        var request = this.getSamples(layer, point, mosaicRule, this.dateField);
+			
                         request.then(lang.hitch(this, function (result) {
                             if (result.samples.length > 0) {
                                 var primaryDate = result.samples[0].attributes[this.dateField];
                                 if (this.secondaryLayer) {
                                     var mosaicRule = this.secondaryLayer.mosaicRule ? this.secondaryLayer.mosaicRule : "";
-                                    var requestSecondary = new esriRequest({
-                                        url: this.secondaryLayer.url + "/getSamples",
-                                        content: {
-                                            f: "json",
-                                            geometry: JSON.stringify(point),
-                                            geometryType: "esriGeometryPoint",
-                                            returnGeometry: false,
-                                            mosaicRule: mosaicRule ? JSON.stringify(mosaicRule.toJson()) : mosaicRule,
-                                            returnFirstValueOnly: true,
-                                            outFields: this.secondaryDateField
-                                        },
-                                        handleAs: "json",
-                                        callbackParamName: "callback"
-                                    });
+                                    var requestSecondary = this.getSamples(this.secondaryLayer, point, mosaicRule, this.secondaryDateField)
+
                                     requestSecondary.then(lang.hitch(this, function (data) {
                                         if (data.samples.length > 0) {
                                             var secondaryDate = data.samples[0].attributes[this.secondaryDateField];
@@ -155,10 +147,43 @@ define([
                                 } else {
                                     html.set(this.primaryDate, locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"}));
                                 }
-                            } else
+                            } else {
                                 html.set(this.primaryDate, "");
+			    }
                         }), lang.hitch(this, function (error) {
                             html.set(this.primaryDate, "");
+			    //console.warn("Primary date not found");
+			    let searching = true;
+			    for (var a = this.map.layerIds.length - 1; a >= 0 && searching; a--) {
+				var layerObject = this.map.getLayer(this.map.layerIds[a]);
+				var title = layerObject.arcgisProps && layerObject.arcgisProps.title ? layerObject.arcgisProps.title : layerObject.title;
+				if (layerObject &&
+				    layerObject.visible &&
+				    layerObject.serviceDataType &&
+				    layerObject.serviceDataType.substr(0, 16) === "esriImageService"
+				    && layerObject.id !== "resultLayer"
+				    && layerObject.id !== "scatterResultLayer"
+				    && layerObject.id !== this.map.resultLayer
+				    && (!title || ((title).charAt(title.length - 1)) !== "_")) {
+				    //console.log(layerObject);
+
+				    // Query the current layer for a date
+				    var layer = layerObject;
+				    var point = this.map.extent.getCenter();
+				    var mosaicRule = layer.mosaicRule ? layer.mosaicRule : "";
+				    var request = this.getSamples(layer, point, mosaicRule, this.dateField);
+				    request.then(lang.hitch(this, function (result) {
+					if (result.samples.length > 0) {
+					    var primaryDate = result.samples[0].attributes[this.dateField];
+					    html.set(this.primaryDate, locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"}));
+					    searching = false;
+					}
+				    }),lang.hitch(this, function (error) {
+					//console.warn("Secondary date not found");
+				    }));
+				}
+			    }
+
                         }));
 
 
@@ -182,8 +207,9 @@ define([
                                 this.dateField = this.layerInfos[this.label].dateField;
                                 if (this.secondaryLayer)
                                     this.getSecondaryDateField();
-                                else
+                                else {
                                     this.primarydate();
+				}
                             } else {
                                 var obj = {};
                                 if (this.primaryLayer.timeInfo && this.primaryLayer.timeInfo.startTimeField) {
