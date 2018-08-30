@@ -147,7 +147,7 @@ define([
                                 } else {
 				    var dateString = locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"});
 				    //console.log(dateString);
-				    if (dateString !== "December 31, 1969") {
+				    if (dateString !== "December 31, 1969" && dateString !== "January 1, 1970") {
 					html.set(this.primaryDate, dateString);
 				    }
 				    else {
@@ -184,7 +184,7 @@ define([
 					    var primaryDate = result.samples[0].attributes[this.dateField];
 					    var dateString = locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"});
 					    //console.log(dateString);
-					    if (dateString !== "December 31, 1969") {
+					    if (dateString !== "December 31, 1969" && dateString !== "January 1, 1970") {
 						html.set(this.primaryDate, dateString);
 						searching = false;
 					    }
