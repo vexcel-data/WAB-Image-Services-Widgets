@@ -145,7 +145,14 @@ define([
                                         }
                                     }));
                                 } else {
-                                    html.set(this.primaryDate, locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"}));
+				    var dateString = locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"});
+				    //console.log(dateString);
+				    if (dateString !== "December 31, 1969") {
+					html.set(this.primaryDate, dateString);
+				    }
+				    else {
+					html.set(this.primaryDate, "");
+				    }
                                 }
                             } else {
                                 html.set(this.primaryDate, "");
@@ -175,13 +182,20 @@ define([
 				    request.then(lang.hitch(this, function (result) {
 					if (result.samples.length > 0) {
 					    var primaryDate = result.samples[0].attributes[this.dateField];
-					    html.set(this.primaryDate, locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"}));
-					    searching = false;
+					    var dateString = locale.format(new Date(primaryDate), {selector: "date", formatLength: "long"});
+					    //console.log(dateString);
+					    if (dateString !== "December 31, 1969") {
+						html.set(this.primaryDate, dateString);
+						searching = false;
+					    }
 					}
 				    }),lang.hitch(this, function (error) {
-					//console.warn("Secondary date not found");
+					html.set(this.primaryDate, '');
 				    }));
 				}
+			    }
+			    if (searching) {
+				html.set(this.primaryDate, '');
 			    }
 
                         }));
