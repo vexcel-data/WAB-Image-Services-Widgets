@@ -76,14 +76,27 @@ define([
                             request.then(lang.hitch(this, function (result) {
                             if (result.samples.length > 0) {
                                 var RstprimaryDate = result.samples[0].attributes[dtField];
-                                this.primaryDate = locale.format(new Date(RstprimaryDate), {selector: "date", formatLength: "long"});
+                                this.primaryDate = locale.format(new Date(RstprimaryDate), {selector: "date", formatLength: "long", month:"short"});
                                 //console.log("witout this "+title);
-                                pp = title+" Date : "+this.primaryDate+" <br/>";
+								var str = this.primaryDate;
+								str = str.replace("January", "Jan");
+								str = str.replace("Febuary", "Feb");
+								str = str.replace("March", "Mar");
+								str = str.replace("April", "Apr");
+								str = str.replace("May", "May");
+								str = str.replace("June", "Jun");
+								str = str.replace("July", "Jul");
+								str = str.replace("August", "Aug");
+								str = str.replace("September", "Sep");
+								str = str.replace("October", "Oct");
+								str = str.replace("November", "Nov");
+								str = str.replace("December", "Dec");
+                                pp = str+" - "+title+" <br/>";
 								if((this.rstVar).indexOf(pp) == -1){
 								if((this.rstVar).search(title) == -1){
                                 var kk = pp + this.rstVar;
                                 this.rstVar = kk;
-                                console.log("witout this >>>>>"+this.rstVar);
+                                //console.log("witout this >>>>>"+this.rstVar);
                                 html.set(this.primaryName,this.rstVar);
 								
 								/*this.rstVar = this.rstVar+""+title+" Date : "+this.primaryDate+" <br/>";
