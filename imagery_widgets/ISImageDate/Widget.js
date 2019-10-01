@@ -91,7 +91,7 @@ define([
 								str = str.replace("October", "Oct");
 								str = str.replace("November", "Nov");
 								str = str.replace("December", "Dec");
-                                pp = str+" - "+title+" <br/>";
+                                pp = str+" - "+title+"&nbsp;<br/>";
 								if((this.rstVar).indexOf(pp) == -1){
 								if((this.rstVar).search(title) == -1){
                                 var kk = pp + this.rstVar;
